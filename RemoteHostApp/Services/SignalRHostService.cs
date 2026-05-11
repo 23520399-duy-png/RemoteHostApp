@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR.Client;
+using Microsoft.AspNetCore.SignalR.Client;
 using RemoteHostApp.DTOs;
 using RemoteHostApp.Helpers;
 using RemoteHostApp.Models;
@@ -16,6 +16,7 @@ public class SignalRHostService : IAsyncDisposable
     private HubConnection? _connection;
     private readonly AppSettings _settings;
     private System.Threading.Timer? _pingTimer;
+    private HostRegisterDto? _lastRegisterDto;
 
     // ─── Events ra ngoài (MainForm lắng nghe) ────────────────────────────────
     public event Action<string, string, string>? OnControlRequestReceived;  // sessionId, viewerId, viewerName
@@ -64,11 +65,24 @@ public class SignalRHostService : IAsyncDisposable
             return Task.CompletedTask;
         };
 
-        _connection.Reconnected += connId =>
+        _connection.Reconnected += async connId =>
         {
             LoggingHelper.Info($"SignalR reconnected – connId: {connId}");
             OnConnectionStatusChanged?.Invoke("Connected");
-            return Task.CompletedTask;
+
+            // Tự động re-register host sau khi reconnect
+            if (_lastRegisterDto != null)
+            {
+                try
+                {
+                    await _connection.InvokeAsync("RegisterHost", _lastRegisterDto);
+                    LoggingHelper.Info($"Auto re-register host thành công – ID: {_lastRegisterDto.HostId}");
+                }
+                catch (Exception ex)
+                {
+                    LoggingHelper.Error($"Auto re-register thất bại: {ex.Message}");
+                }
+            }
         };
 
         _connection.Closed += ex =>
@@ -164,6 +178,7 @@ public class SignalRHostService : IAsyncDisposable
     {
         EnsureConnected();
         HostId = request.HostId;
+        _lastRegisterDto = request;
         await _connection!.InvokeAsync("RegisterHost", request);
         LoggingHelper.Info($"Đã đăng ký host – ID: {request.HostId}");
     }

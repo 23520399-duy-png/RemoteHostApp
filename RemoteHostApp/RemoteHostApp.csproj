@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -10,10 +10,6 @@
     <AssemblyTitle>RemoteHostApp</AssemblyTitle>
     <RootNamespace>RemoteHostApp</RootNamespace>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="app.manifest" />
-  </ItemGroup>
 
   <ItemGroup>
     <!-- SignalR -->

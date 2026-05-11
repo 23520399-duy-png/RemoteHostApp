@@ -1,4 +1,4 @@
-﻿using RemoteHostApp.DTOs;
+using RemoteHostApp.DTOs;
 using RemoteHostApp.Helpers;
 using RemoteHostApp.Models;
 using System.Drawing;
@@ -16,6 +16,7 @@ public class ScreenCaptureService : IDisposable
     private readonly System.Threading.Timer _timer;
     private readonly AppSettings _settings;
     private readonly SignalRHostService _signalR;
+    private readonly SemaphoreSlim _captureLock = new(1, 1);
 
     private ActiveSession? _activeSession;
     private bool _isRunning;
@@ -67,6 +68,10 @@ public class ScreenCaptureService : IDisposable
         if (!_isRunning || _activeSession?.Status != SessionStatus.Accepted)
             return;
 
+        // Tránh frame overlap: nếu frame trước chưa xong → bỏ qua tick này
+        if (!_captureLock.Wait(0))
+            return;
+
         try
         {
             using var bitmap = CaptureScreen();
@@ -95,6 +100,10 @@ public class ScreenCaptureService : IDisposable
         {
             LoggingHelper.Error($"CaptureScreen lỗi: {ex.Message}");
         }
+        finally
+        {
+            _captureLock.Release();
+        }
     }
 
     // ─── Screen capture ───────────────────────────────────────────────────────
@@ -114,6 +123,7 @@ public class ScreenCaptureService : IDisposable
         if (_disposed) return;
         StopCapture();
         _timer.Dispose();
+        _captureLock.Dispose();
         _disposed = true;
     }
-}
+}

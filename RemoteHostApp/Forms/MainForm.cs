@@ -1,4 +1,4 @@
-﻿using RemoteHostApp.DTOs;
+using RemoteHostApp.DTOs;
 using RemoteHostApp.Helpers;
 using RemoteHostApp.Models;
 using RemoteHostApp.Services;
@@ -21,6 +21,7 @@ public partial class MainForm : Form
     private readonly InputSimulatorService _input;
     private readonly SessionManager _sessionMgr;
     private readonly AppSettings _settings;
+    private bool _isClosing;
 
     public MainForm(AppSettings settings,
                     SignalRHostService signalR,
@@ -371,6 +372,11 @@ public partial class MainForm : Form
         using var popup = new AcceptControlForm(viewerName, sessionId);
         var result = popup.ShowDialog(this);
 
+        // Cache giá trị UI trước khi vào background thread (tránh cross-thread)
+        var hostId = txtHostId.Text.Trim();
+        var isAccepted = popup.IsAccepted;
+        var rejectReason = popup.RejectReason;
+
         // Xử lý response async (không block UI)
         _ = Task.Run(async () =>
         {
@@ -379,12 +385,12 @@ public partial class MainForm : Form
                 var dto = new ControlResponseDto
                 {
                     SessionId = sessionId,
-                    HostId = txtHostId.Text.Trim(),
-                    IsAccepted = popup.IsAccepted,
-                    RejectReason = popup.RejectReason
+                    HostId = hostId,
+                    IsAccepted = isAccepted,
+                    RejectReason = rejectReason
                 };
 
-                if (popup.IsAccepted)
+                if (isAccepted)
                 {
                     await _signalR.AcceptControl(dto);
 
@@ -407,7 +413,7 @@ public partial class MainForm : Form
                 else
                 {
                     await _signalR.RejectControl(dto);
-                    LoggingHelper.Info($"Đã từ chối: {popup.RejectReason ?? "(không có lý do)"}");
+                    LoggingHelper.Info($"Đã từ chối: {rejectReason ?? "(không có lý do)"}");
                 }
             }
             catch (Exception ex)
@@ -469,8 +475,14 @@ public partial class MainForm : Form
 
     private async void MainForm_FormClosing(object? sender, FormClosingEventArgs e)
     {
-        // Ngăn form đóng ngay, dọn dẹp async
+        // Nếu đã xử lý closing xong → cho phép đóng
+        if (_isClosing)
+            return;
+
+        // Lần đầu → cancel để chờ dọn dẹp async
         e.Cancel = true;
+        _isClosing = true;
+
         _capture.StopCapture();
 
         if (_sessionMgr.CurrentSession != null)
@@ -480,7 +492,8 @@ public partial class MainForm : Form
         }
 
         await _signalR.DisconnectAsync();
-        e.Cancel = false;
-        Application.Exit();
+
+        // Dọn xong → đóng form thật sự
+        Close();
     }
 }
