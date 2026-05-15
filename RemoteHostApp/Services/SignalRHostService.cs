@@ -129,10 +129,10 @@ public class SignalRHostService : IAsyncDisposable
 
         // Server yêu cầu host cho phép điều khiển
         _connection.On<string, string, string>("ReceiveControlRequest",
-            (sessionId, viewerId, viewerName) =>
+            (SessionId, ViewerId, ViewerName) =>
             {
-                LoggingHelper.Info($"[ControlRequest] Viewer '{viewerName}' ({viewerId}) – session: {sessionId}");
-                OnControlRequestReceived?.Invoke(sessionId, viewerId, viewerName);
+                LoggingHelper.Info($"[ControlRequest] Viewer '{ViewerName}' ({ViewerId}) – session: {SessionId}");
+                OnControlRequestReceived?.Invoke(SessionId, ViewerId, ViewerName);
             });
 
         // Server gửi sự kiện chuột từ viewer
