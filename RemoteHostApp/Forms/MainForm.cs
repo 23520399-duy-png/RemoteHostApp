@@ -40,8 +40,10 @@ public partial class MainForm : Form
         SetupLogging();
 
         // Giá trị mặc định
+        txtServerUrl.Text = _settings.ServerUrl;
         txtHostId.Text = $"{Environment.MachineName}-{Guid.NewGuid():N}".Substring(0, 28);
         txtComputerName.Text = Environment.MachineName;
+        txtUserId.Text = $"USER-{Environment.MachineName}";
 
         UpdateUI();
     }
@@ -52,6 +54,8 @@ public partial class MainForm : Form
     private TextBox txtHostId = null!;
     private Label lblComputerName = null!;
     private TextBox txtComputerName = null!;
+    private Label lblUserId = null!;
+    private TextBox txtUserId = null!;
     private Button btnConnect = null!;
     private Button btnRegister = null!;
     private Button btnStartStop = null!;
@@ -70,38 +74,69 @@ public partial class MainForm : Form
         Font = new Font("Segoe UI", 9);
         FormClosing += MainForm_FormClosing;
 
-        // ── Panel trên ──────────────────────────────────────────────────────
-        var pnlTop = new Panel { Dock = DockStyle.Top, Height = 170, Padding = new Padding(10) };
-
-        lblServerUrl = new Label { Text = "Server URL:", Bounds = new Rectangle(10, 14, 90, 20) };
-        txtServerUrl = new TextBox
+        // ===== TOP LAYOUT =====
+        var pnlTop = new TableLayoutPanel
         {
-            Bounds = new Rectangle(105, 10, 250, 24),
-            Text = _settings.ServerUrl
+            Dock = DockStyle.Top,
+            Height = 190,
+            ColumnCount = 2,
+            RowCount = 5,
+            Padding = new Padding(10),
+            AutoSize = false
         };
 
-        lblHostId = new Label { Text = "Host ID:", Bounds = new Rectangle(10, 48, 90, 20) };
-        txtHostId = new TextBox { Bounds = new Rectangle(105, 44, 340, 24) };
+        pnlTop.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 100));
+        pnlTop.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
 
-        lblComputerName = new Label { Text = "Computer:", Bounds = new Rectangle(10, 82, 90, 20) };
-        txtComputerName = new TextBox { Bounds = new Rectangle(105, 78, 250, 24) };
+        lblServerUrl = new Label { Text = "Server URL:", AutoSize = true, TextAlign = ContentAlignment.MiddleLeft };
+        txtServerUrl = new TextBox { Dock = DockStyle.Fill };
 
-        // Nút kết nối
+        lblHostId = new Label { Text = "Host ID:", AutoSize = true };
+        txtHostId = new TextBox { Dock = DockStyle.Fill };
+
+        lblComputerName = new Label { Text = "Computer:", AutoSize = true };
+        txtComputerName = new TextBox { Dock = DockStyle.Fill };
+
+        lblUserId = new Label { Text = "User ID:", AutoSize = true };
+        txtUserId = new TextBox { Dock = DockStyle.Fill };
+
+        pnlTop.Controls.Add(lblServerUrl, 0, 0);
+        pnlTop.Controls.Add(txtServerUrl, 1, 0);
+
+        pnlTop.Controls.Add(lblHostId, 0, 1);
+        pnlTop.Controls.Add(txtHostId, 1, 1);
+
+        pnlTop.Controls.Add(lblComputerName, 0, 2);
+        pnlTop.Controls.Add(txtComputerName, 1, 2);
+
+        pnlTop.Controls.Add(lblUserId, 0, 3);
+        pnlTop.Controls.Add(txtUserId, 1, 3);
+
+        // ===== BUTTON BAR =====
+        var pnlButtons = new FlowLayoutPanel
+        {
+            Dock = DockStyle.Bottom,
+            Height = 50,
+            FlowDirection = FlowDirection.LeftToRight,
+            Padding = new Padding(10, 5, 10, 5)
+        };
+
         btnConnect = new Button
         {
             Text = "🔌 Kết nối",
-            Bounds = new Rectangle(10, 118, 120, 36),
+            Width = 120,
+            Height = 32,
             BackColor = Color.FromArgb(0, 120, 212),
             ForeColor = Color.White,
             FlatStyle = FlatStyle.Flat
         };
         btnConnect.Click += BtnConnect_Click;
 
-        // Nút đăng ký
         btnRegister = new Button
         {
             Text = "📋 Đăng ký Host",
-            Bounds = new Rectangle(140, 118, 140, 36),
+            Width = 140,
+            Height = 32,
             BackColor = Color.FromArgb(16, 124, 16),
             ForeColor = Color.White,
             FlatStyle = FlatStyle.Flat,
@@ -109,11 +144,11 @@ public partial class MainForm : Form
         };
         btnRegister.Click += BtnRegister_Click;
 
-        // Nút Start/Stop streaming
         btnStartStop = new Button
         {
             Text = "▶ Start Stream",
-            Bounds = new Rectangle(290, 118, 140, 36),
+            Width = 140,
+            Height = 32,
             BackColor = Color.FromArgb(100, 100, 200),
             ForeColor = Color.White,
             FlatStyle = FlatStyle.Flat,
@@ -121,11 +156,11 @@ public partial class MainForm : Form
         };
         btnStartStop.Click += BtnStartStop_Click;
 
-        // Nút kết thúc điều khiển
         btnEndControl = new Button
         {
             Text = "🛑 End Control",
-            Bounds = new Rectangle(440, 118, 130, 36),
+            Width = 130,
+            Height = 32,
             BackColor = Color.FromArgb(200, 40, 40),
             ForeColor = Color.White,
             FlatStyle = FlatStyle.Flat,
@@ -133,30 +168,50 @@ public partial class MainForm : Form
         };
         btnEndControl.Click += BtnEndControl_Click;
 
-        pnlTop.Controls.AddRange(new Control[] {
-            lblServerUrl, txtServerUrl,
-            lblHostId, txtHostId,
-            lblComputerName, txtComputerName,
-            btnConnect, btnRegister, btnStartStop, btnEndControl
+        pnlButtons.Controls.AddRange(new Control[]
+        {
+        btnConnect,
+        btnRegister,
+        btnStartStop,
+        btnEndControl
         });
 
-        // ── Status bar ──────────────────────────────────────────────────────
-        var pnlStatus = new Panel { Dock = DockStyle.Top, Height = 36, BackColor = Color.FromArgb(240, 240, 240) };
+        pnlTop.SetColumnSpan(pnlButtons, 2);
+        pnlTop.Controls.Add(pnlButtons, 0, 4);
+
+        // ===== STATUS BAR =====
+        var pnlStatus = new Panel
+        {
+            Dock = DockStyle.Top,
+            Height = 30,
+            BackColor = Color.FromArgb(240, 240, 240)
+        };
+
         lblStatus = new Label
         {
             Text = "● Offline",
             ForeColor = Color.Gray,
-            Font = new Font("Segoe UI", 10, FontStyle.Bold),
-            AutoSize = false,
             Dock = DockStyle.Fill,
             TextAlign = ContentAlignment.MiddleLeft,
-            Padding = new Padding(10, 0, 0, 0)
+            Padding = new Padding(10, 0, 0, 0),
+            Font = new Font("Segoe UI", 10, FontStyle.Bold)
         };
+
         pnlStatus.Controls.Add(lblStatus);
 
-        // ── Log panel ───────────────────────────────────────────────────────
-        var pnlLog = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10) };
-        var lblLog = new Label { Text = "Log:", Dock = DockStyle.Top, Height = 22 };
+        // ===== LOG AREA =====
+        var pnlLog = new Panel
+        {
+            Dock = DockStyle.Fill,
+            Padding = new Padding(10)
+        };
+
+        var lblLog = new Label
+        {
+            Text = "Log:",
+            Dock = DockStyle.Top,
+            Height = 20
+        };
 
         var btnClearLog = new Button
         {
@@ -176,9 +231,11 @@ public partial class MainForm : Form
             ScrollBars = RichTextBoxScrollBars.Vertical
         };
 
-        pnlLog.Controls.AddRange(new Control[] { rtbLog, btnClearLog, lblLog });
+        pnlLog.Controls.Add(rtbLog);
+        pnlLog.Controls.Add(btnClearLog);
+        pnlLog.Controls.Add(lblLog);
 
-        // Thứ tự thêm vào form (Dock.Top xếp từ trên xuống)
+        // ===== FORM ORDER =====
         Controls.Add(pnlLog);
         Controls.Add(pnlStatus);
         Controls.Add(pnlTop);
@@ -295,7 +352,8 @@ public partial class MainForm : Form
             var dto = new HostRegisterDto
             {
                 HostId = txtHostId.Text.Trim(),
-                ComputerName = txtComputerName.Text.Trim()
+                ComputerName = txtComputerName.Text.Trim(),
+                UserId = txtUserId.Text.Trim(),
             };
 
             if (string.IsNullOrWhiteSpace(dto.HostId))
