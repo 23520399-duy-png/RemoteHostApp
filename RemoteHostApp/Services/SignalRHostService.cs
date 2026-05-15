@@ -177,10 +177,19 @@ public class SignalRHostService : IAsyncDisposable
     public async Task RegisterHost(HostRegisterDto request)
     {
         EnsureConnected();
-        HostId = request.HostId;
-        _lastRegisterDto = request;
-        await _connection!.InvokeAsync("RegisterHost", request);
-        LoggingHelper.Info($"Đã đăng ký host – ID: {request.HostId}");
+        try
+        {
+            await _connection!.InvokeAsync("RegisterHost", request);
+
+            HostId = request.HostId;
+            _lastRegisterDto = request;
+
+            LoggingHelper.Info($"Đã đăng ký host – ID: {request.HostId}");
+        }
+        catch (Microsoft.AspNetCore.SignalR.HubException ex)
+        {
+            LoggingHelper.Error($"RegisterHost failed: {ex.Message}");
+        }
     }
 
     /// <summary>Ping định kỳ để server biết host còn online</summary>
