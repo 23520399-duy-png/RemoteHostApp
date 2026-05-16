@@ -138,7 +138,7 @@ public class SignalRHostService : IAsyncDisposable
         // Server gửi sự kiện chuột từ viewer
         _connection.On<MouseEventDto>("ReceiveMouseEvent", dto =>
         {
-            LoggingHelper.Debug($"[MouseEvent] {dto.EventType} ({dto.X},{dto.Y})");
+            LoggingHelper.Debug($"[MouseEvent] {dto.Action} ({dto.X},{dto.Y})");
             OnMouseEventReceived?.Invoke(dto);
         });
 
@@ -235,7 +235,14 @@ public class SignalRHostService : IAsyncDisposable
     public async Task SendScreenFrame(ScreenFrameDto frame)
     {
         if (!IsConnected) return;
-        await _connection!.SendAsync("SendScreenFrame", frame);
+        try
+        {
+            await _connection!.SendAsync("SendScreenFrame", frame);
+        }
+        catch (Exception ex)
+        {
+            LoggingHelper.Warning($"SendScreenFrame lỗi: {ex.Message}");
+        }
     }
 
     // ─── Ping timer ───────────────────────────────────────────────────────────

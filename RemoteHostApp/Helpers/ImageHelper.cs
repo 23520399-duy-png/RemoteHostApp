@@ -38,14 +38,19 @@ public static class ImageHelper
         encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, (long)quality);
 
         var jpegCodec = GetJpegCodec();
+        if (jpegCodec == null)
+        {
+            throw new Exception("JPEG codec not found.");
+        }
+
         using var ms = new MemoryStream();
         resized.Save(ms, jpegCodec, encoderParams);
         return Convert.ToBase64String(ms.ToArray());
     }
 
-    private static ImageCodecInfo GetJpegCodec()
+    private static ImageCodecInfo? GetJpegCodec()
     {
         return ImageCodecInfo.GetImageEncoders()
-            .First(c => c.FormatID == ImageFormat.Jpeg.Guid);
+            .FirstOrDefault(c => c.FormatID == ImageFormat.Jpeg.Guid);
     }
 }

@@ -64,8 +64,10 @@ public class ScreenCaptureService : IDisposable
 
     private async void OnTimerTick(object? state)
     {
+        var session = _activeSession;
+
         // Chỉ gửi khi session đang ở trạng thái Accepted
-        if (!_isRunning || _activeSession?.Status != SessionStatus.Accepted)
+        if (!_isRunning || session?.Status != SessionStatus.Accepted)
             return;
 
         // Tránh frame overlap: nếu frame trước chưa xong → bỏ qua tick này
@@ -83,7 +85,7 @@ public class ScreenCaptureService : IDisposable
 
             var frame = new ScreenFrameDto
             {
-                SessionId = _activeSession.SessionId,
+                SessionId = session.SessionId,
                 ImageBase64 = base64,
                 ScreenWidth = _screenWidth,
                 ScreenHeight = _screenHeight,
@@ -98,7 +100,7 @@ public class ScreenCaptureService : IDisposable
         }
         catch (Exception ex)
         {
-            LoggingHelper.Error($"CaptureScreen lỗi: {ex.Message}");
+            LoggingHelper.Error(ex.ToString());
         }
         finally
         {
@@ -126,4 +128,4 @@ public class ScreenCaptureService : IDisposable
         _captureLock.Dispose();
         _disposed = true;
     }
-}
+}

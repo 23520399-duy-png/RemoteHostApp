@@ -23,15 +23,15 @@ namespace RemoteHostApp.Services
         {
             try
             {
-                switch (dto.EventType)
+                switch (dto.Action)
                 {
                     case "Move": SimulateMove(dto.X, dto.Y); break;
                     case "LeftClick": SimulateLeftClick(dto.X, dto.Y); break;
                     case "RightClick": SimulateRightClick(dto.X, dto.Y); break;
                     case "DoubleClick": SimulateDoubleClick(dto.X, dto.Y); break;
-                    case "Scroll": SimulateScroll(dto.X, dto.Y, dto.ScrollDelta); break;
+                    case "Scroll": SimulateScroll(dto.X, dto.Y, dto.Delta); break;
                     default:
-                        LoggingHelper.Warning($"MouseEvent không xác định: {dto.EventType}");
+                        LoggingHelper.Warning($"MouseEvent không xác định: {dto.Action}");
                         break;
                 }
             }
