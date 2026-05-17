@@ -145,7 +145,7 @@ public class SignalRHostService : IAsyncDisposable
         // Server gửi sự kiện bàn phím từ viewer
         _connection.On<KeyboardEventDto>("ReceiveKeyboardEvent", dto =>
         {
-            LoggingHelper.Debug($"[KeyEvent] {dto.EventType} VK={dto.KeyCode}");
+            LoggingHelper.Debug($"[KeyEvent] {dto.Action} Code={dto.Code} Key={dto.Key}");
             OnKeyboardEventReceived?.Invoke(dto);
         });
 

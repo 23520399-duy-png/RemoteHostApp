@@ -6,9 +6,19 @@
 public class KeyboardEventDto
 {
     public string SessionId { get; set; } = string.Empty;
-    public string EventType { get; set; } = string.Empty; // KeyDown, KeyUp
-    public int KeyCode { get; set; }
-    public bool IsCtrl { get; set; }
-    public bool IsShift { get; set; }
-    public bool IsAlt { get; set; }
+    
+    // KeyDown/KeyUp
+    public string Action { get; set; } = string.Empty;
+
+    // Tên phím logic
+    public string Key { get; set; } = string.Empty;
+
+    // Mã vị trí vật lý
+    public string Code { get; set; } = string.Empty;
+
+    public bool CtrlKey  { get; set; }
+    public bool ShiftKey { get; set; }
+    public bool AltKey   { get; set; }
+
+    public DateTime SentAt { get; set; } = DateTime.UtcNow;
 }
