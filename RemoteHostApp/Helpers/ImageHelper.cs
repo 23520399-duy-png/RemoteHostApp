@@ -14,11 +14,14 @@ public static class ImageHelper
     /// <summary>
     /// Resize bitmap và nén thành JPEG Base64
     /// </summary>
-    public static string ResizeAndCompress(Bitmap source, int maxWidth = 1280, int quality = 75)
+    public static (string Base64, int Width, int Height)
+    ResizeAndCompress(Bitmap source, int maxWidth = 1280, int quality = 75)
     {
-        // Tính kích thước đích giữ tỉ lệ
-        int srcW = source.Width, srcH = source.Height;
-        int dstW = srcW, dstH = srcH;
+        int srcW = source.Width;
+        int srcH = source.Height;
+
+        int dstW = srcW;
+        int dstH = srcH;
 
         if (srcW > maxWidth)
         {
@@ -27,25 +30,30 @@ public static class ImageHelper
         }
 
         using var resized = new Bitmap(dstW, dstH, PixelFormat.Format24bppRgb);
+
         using (var g = Graphics.FromImage(resized))
         {
-            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Bilinear;
+            g.InterpolationMode =
+                System.Drawing.Drawing2D.InterpolationMode.HighQualityBilinear;
+
             g.DrawImage(source, 0, 0, dstW, dstH);
         }
 
-        // Nén JPEG với quality tuỳ chỉnh
         var encoderParams = new EncoderParameters(1);
-        encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, (long)quality);
+        encoderParams.Param[0] =
+            new EncoderParameter(Encoder.Quality, (long)quality);
 
         var jpegCodec = GetJpegCodec();
-        if (jpegCodec == null)
-        {
-            throw new Exception("JPEG codec not found.");
-        }
 
         using var ms = new MemoryStream();
-        resized.Save(ms, jpegCodec, encoderParams);
-        return Convert.ToBase64String(ms.ToArray());
+
+        resized.Save(ms, jpegCodec!, encoderParams);
+
+        return (
+            Convert.ToBase64String(ms.ToArray()),
+            dstW,
+            dstH
+        );
     }
 
     private static ImageCodecInfo? GetJpegCodec()

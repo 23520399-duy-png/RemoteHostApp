@@ -31,7 +31,7 @@ public class ScreenCaptureService : IDisposable
         _settings = settings;
         _signalR = signalR;
 
-        var screen = Screen.PrimaryScreen?.Bounds ?? new Rectangle(0, 0, 1920, 1080);
+        var screen = SystemInformation.VirtualScreen;
         _screenWidth = screen.Width;
         _screenHeight = screen.Height;
 
@@ -77,8 +77,10 @@ public class ScreenCaptureService : IDisposable
         try
         {
             using var bitmap = CaptureScreen();
-            var base64 = ImageHelper.ResizeAndCompress(
-                bitmap, _settings.MaxFrameWidth, _settings.JpegQuality);
+            var result = ImageHelper.ResizeAndCompress(
+    bitmap,
+    _settings.MaxFrameWidth,
+    _settings.JpegQuality);
 
             // Lấy vị trí chuột hiện tại
             var cursor = Cursor.Position;
@@ -86,13 +88,18 @@ public class ScreenCaptureService : IDisposable
             var frame = new ScreenFrameDto
             {
                 SessionId = session.SessionId,
-                ImageBase64 = base64,
+
+                ImageBase64 = result.Base64,
+
                 ScreenWidth = _screenWidth,
                 ScreenHeight = _screenHeight,
-                FrameWidth = _settings.MaxFrameWidth,
-                FrameHeight = (int)(_screenHeight * ((double)_settings.MaxFrameWidth / _screenWidth)),
+
+                FrameWidth = result.Width,
+                FrameHeight = result.Height,
+
                 MouseX = cursor.X,
                 MouseY = cursor.Y,
+
                 SentAt = DateTime.UtcNow
             };
 
@@ -113,10 +120,11 @@ public class ScreenCaptureService : IDisposable
     /// <summary>Chụp toàn bộ màn hình chính</summary>
     public Bitmap CaptureScreen()
     {
-        var bmp = new Bitmap(_screenWidth, _screenHeight);
+        var bounds = SystemInformation.VirtualScreen;
+        var bmp = new Bitmap(bounds.Width, bounds.Height);
         using var g = Graphics.FromImage(bmp);
-        g.CopyFromScreen(Point.Empty, Point.Empty,
-            new Size(_screenWidth, _screenHeight));
+        g.CopyFromScreen(bounds.Left, bounds.Top,0, 0, bounds.Size);
+
         return bmp;
     }
 

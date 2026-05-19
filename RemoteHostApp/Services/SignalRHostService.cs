@@ -138,7 +138,8 @@ public class SignalRHostService : IAsyncDisposable
         // Server gửi sự kiện chuột từ viewer
         _connection.On<MouseEventDto>("ReceiveMouseEvent", dto =>
         {
-            LoggingHelper.Debug($"[MouseEvent] {dto.Action} ({dto.X},{dto.Y})");
+            if (dto.Action != "Move")
+                LoggingHelper.Debug($"[MouseEvent] {dto.Action} ({dto.X},{dto.Y})");
             OnMouseEventReceived?.Invoke(dto);
         });
 

@@ -27,8 +27,14 @@ namespace RemoteHostApp.Services
                 {
                     case "Move":        SimulateMove(dto.X, dto.Y);               break;
                     case "LeftClick":   SimulateLeftClick(dto.X, dto.Y);          break;
+                    case "LeftDown":    SimulateMouseButton(dto.X, dto.Y, down: true,  flags: MOUSEEVENTF_LEFTDOWN);  break;
+                    case "LeftUp":      SimulateMouseButton(dto.X, dto.Y, down: false, flags: MOUSEEVENTF_LEFTUP);    break;
                     case "RightClick":  SimulateRightClick(dto.X, dto.Y);         break;
+                    case "RightDown":   SimulateMouseButton(dto.X, dto.Y, down: true,  flags: MOUSEEVENTF_RIGHTDOWN); break;
+                    case "RightUp":     SimulateMouseButton(dto.X, dto.Y, down: false, flags: MOUSEEVENTF_RIGHTUP);   break;
                     case "MiddleClick": SimulateMiddleClick(dto.X, dto.Y);        break;
+                    case "MiddleDown":  SimulateMouseButton(dto.X, dto.Y, down: true,  flags: MOUSEEVENTF_MIDDLEDOWN);break;
+                    case "MiddleUp":    SimulateMouseButton(dto.X, dto.Y, down: false, flags: MOUSEEVENTF_MIDDLEUP);  break;
                     case "DoubleClick": SimulateDoubleClick(dto.X, dto.Y);        break;
                     case "Scroll":      SimulateScroll(dto.X, dto.Y, dto.Delta);  break;
                     default:
@@ -87,6 +93,17 @@ namespace RemoteHostApp.Services
                 new INPUT { type = INPUT_MOUSE, U = new InputUnion { mi = new MOUSEINPUT { dx = ax, dy = ay, dwFlags = MOUSEEVENTF_MIDDLEDOWN | MOUSEEVENTF_ABSOLUTE } } },
                 new INPUT { type = INPUT_MOUSE, U = new InputUnion { mi = new MOUSEINPUT { dx = ax, dy = ay, dwFlags = MOUSEEVENTF_MIDDLEUP   | MOUSEEVENTF_ABSOLUTE } } }
             );
+        }
+
+        private static void SimulateMouseButton(int x, int y, bool down, uint flags)
+        {
+            SimulateMove(x, y);
+            var (ax, ay) = ToAbsolute(x, y);
+            SendInputs(new INPUT
+            {
+                type = INPUT_MOUSE,
+                U = new InputUnion { mi = new MOUSEINPUT { dx = ax, dy = ay, dwFlags = flags | MOUSEEVENTF_ABSOLUTE } }
+            });
         }
 
         private static void SimulateDoubleClick(int x, int y)
